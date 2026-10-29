@@ -389,7 +389,7 @@ function showNotices() {
     }, 'notice');
 }
 
-// عرض الفيديوهات التعليمية (Videoss) بطريقة الـ iframe المستقرة مع الإيقاف الفوري
+// عرض الفيديوهات التعليمية (Videoss) مع الإيقاف والغلق التام للفيديو السابق عند تشغيل فيديو جديد
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -416,14 +416,12 @@ function showVideoss() {
         let rawLink = item.video || '#';
         let embedLink = rawLink;
 
-        // تحويل رابط يوتيوب العادي إلى رابط تضمين صحيح
         if (rawLink.includes("watch?v=")) {
             embedLink = rawLink.replace("watch?v=", "embed/");
         } else if (rawLink.includes("youtu.be/")) {
             embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
         }
 
-        // تنظيف الرابط من أي معاملات زائدة وإضافة وسائط التشغيل الآمنة
         if (embedLink.includes("&")) {
             embedLink = embedLink.split("&")[0];
         }
@@ -451,7 +449,7 @@ function showVideoss() {
 
     VideossContent.innerHTML = html;
 
-    // تفعيل زر التشغيل لكل فيديو لإغلاق البقية وتشغيل الفيديو المطلوب فقط لمنع الأخطاء وضمان عدم العمل معاً
+    // تفعيل زر التشغيل لكل فيديو لإغلاق البقية تماماً ومنع عمل أكثر من فيديو في نفس الوقت
     const videoCards = VideossContent.querySelectorAll('.video-item-card');
     
     videoCards.forEach(card => {
@@ -459,18 +457,16 @@ function showVideoss() {
         const iframe = card.querySelector('iframe');
         
         playBtn.addEventListener('click', () => {
-            // إيقاف وتفريغ جميع الـ iframes الأخرى فوراً
+            // إيقاف وتفريغ جميع الـ iframes الأخرى فوراً وغلقها تماماً
             videoCards.forEach(otherCard => {
                 const otherIframe = otherCard.querySelector('iframe');
                 if (otherIframe !== iframe) {
-                    otherIframe.src = ""; // إيقاف تام وغلق الفيديو الآخر
+                    otherIframe.src = ""; 
                 }
             });
 
-            // تشغيل الفيديو الحالي من خلال تعيين الرابط الحقيقي للـ iframe
-            if (!iframe.src || iframe.src === "" || iframe.src === window.location.href) {
-                iframe.src = iframe.getAttribute('data-src') + "?autoplay=1";
-            }
+            // تشغيل الفيديو الحالي
+            iframe.src = iframe.getAttribute('data-src') + "?autoplay=1";
         });
     });
 }
