@@ -390,6 +390,7 @@ function showNotices() {
 }
 
 // عرض الفيديوهات التعليمية (Videoss) مع غلق الفيديو السابق عند تشغيل فيديو آخر
+// عرض الفيديوهات التعليمية (Videoss) باستخدام YouTube API لإيقاف الفيديوهات السابقة تماماً
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -414,26 +415,23 @@ function showVideoss() {
         const videoTitle = item.title || 'فيديو تعليمي';
         
         let rawLink = item.video || '#';
-        let embedLink = rawLink;
+        let videoId = '';
 
-        // دالة ذكية لتحويل رابط يوتيوب العادي إلى رابط تضمين (Embed) لتجنب الخطأ 153
+        // استخراج معرف فيديو يوتيوب (Video ID) بدقة
         if (rawLink.includes("watch?v=")) {
-            embedLink = rawLink.replace("watch?v=", "embed/");
+            videoId = rawLink.split("watch?v=")[1].split("&")[0];
         } else if (rawLink.includes("youtu.be/")) {
-            embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
+            videoId = rawLink.split("youtu.be/")[1].split("?")[0];
         }
 
-        const separator = embedLink.includes("?") ? "&" : "?";
-        const finalEmbedLink = `${embedLink}${separator}enablejsapi=1`;
-
         html += `
-            <div class="video-item-card" data-index="${index}" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
+            <div class="video-item-card" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
                 <span style="display:block; color:#666; font-size:14px; margin-bottom:5px; font-weight:bold;">${unitName} ${lessonName}</span>
                 <h3 style="color:#0d47a1; margin-bottom:12px; font-size:20px;">${videoTitle}</h3>
                 
                 <!-- مشغل الفيديو المتجاوب داخل الموقع -->
                 <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; margin-bottom:15px; background:#000; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
-                    <iframe class="academy-video-iframe" src="${finalEmbedLink}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <iframe id="yt-player-${index}" class="academy-video-iframe" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
 
                 <a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; padding:10px 22px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:16px;">
@@ -445,23 +443,27 @@ function showVideoss() {
 
     VideossContent.innerHTML = html;
 
-    // إضافة آلية ذكية لإيقاف وفصل أي فيديو آخر بمجرد تفاعل الطالب مع كارت فيديو جديد
-    const videoCards = VideossContent.querySelectorAll('.video-item-card');
-    
-    videoCards.forEach(card => {
-        card.addEventListener('click', () => {
-            videoCards.forEach(otherCard => {
-                if (otherCard !== card) {
-                    const otherIframe = otherCard.querySelector('iframe');
-                    if (otherIframe) {
-                        const originalSrc = otherIframe.src;
+    // حقن سكريبت يوتيوب للتحكم التلقائي وإيقاف الفيديوهات الأخرى عند التشغيل
+    if (!window.YT) {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    }
+
+    // تهيئة اللاعبين وإيقاف البقية عند تفاعل الطالب
+    setTimeout(() => {
+        const iframes = VideossContent.querySelectorAll('.academy-video-iframe');
+        iframes.forEach(iframe => {
+            iframe.addEventListener('click', () => {
+                iframes.forEach(otherIframe => {
+                    if (otherIframe !== iframe) {
+                        const src = otherIframe.src;
                         otherIframe.src = "";
-                        setTimeout(() => {
-                            otherIframe.src = originalSrc;
-                        }, 50);
+                        setTimeout(() => { otherIframe.src = src; }, 50);
                     }
-                }
+                });
             });
         });
-    });
+    }, 500);
 }
