@@ -2,7 +2,7 @@
 // Google Sheets APIs
 //=========================================
 
-const API_URL = "https://script.google.com/macros/s/AKfycbziDG81Tyo8bmWHTRc_jOWQyIFxlNsmu0a-FDSOYxvyfkMhQmrSkA20naL723GPsMbytQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyMqzRgorsFQeNhwrNWYb6a6eMgaabkOCgpVTnUUrEnVJ1QTkTyCNWxMT5T1r7lMlSL5w/exec";
 const ATTENDANCE_API = "https://script.google.com/macros/s/AKfycbzd0as48EDKd4k9y2IMggJzTc9QGhMuUysa0X4R1Q6plhtGtFlnfMBbXnyZamZfFPN1/exec";
 const HOMEWORK_API = "https://script.google.com/macros/s/AKfycbyGgMFmNMPR6OAWNBemEoTF_jFs1u2AXaWJXFOeA6iVuOlgeJau1DuAutH89h9oP_hC-g/exec";
 const EXAM_API = "https://script.google.com/macros/s/AKfycbyrSNWCMtLaFZepp3OlxuLip2Pe02X2bndnkbqJE_2DszwwPPKsSnP1wsSlv7pqjvi8fA/exec";
@@ -390,6 +390,7 @@ function showNotices() {
 }
 
 // عرض الفيديوهات التعليمية (Videoss)
+// عرض الفيديوهات التعليمية (Videoss) مع تصحيح روابط يوتيوب لمنع خطأ 153
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -400,7 +401,6 @@ function showVideoss() {
     
     if(VideossCard) VideossCard.classList.remove("hidden");
 
-    // جلب الفيديوهات مباشرة من بيانات الطالب المخزنة عند تسجيل الدخول
     const videos = currentStudent && currentStudent.videos ? currentStudent.videos : [];
 
     if (!videos || videos.length === 0) {
@@ -413,14 +413,29 @@ function showVideoss() {
         const unitName = item.unit ? `(${item.unit})` : '';
         const lessonName = item.lesson ? ` - ${item.lesson}` : '';
         const videoTitle = item.title || 'فيديو تعليمي';
-        const videoLink = item.video || '#';
+        
+        let rawLink = item.video || '#';
+        let embedLink = rawLink;
+
+        // دالة ذكية لتحويل رابط يوتيوب العادي إلى رابط تضمين (Embed) لتجنب الخطأ 153
+        if (rawLink.includes("watch?v=")) {
+            embedLink = rawLink.replace("watch?v=", "embed/");
+        } else if (rawLink.includes("youtu.be/")) {
+            embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
+        }
 
         html += `
-            <div class="video-item-card" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:15px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
+            <div class="video-item-card" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
                 <span style="display:block; color:#666; font-size:14px; margin-bottom:5px; font-weight:bold;">${unitName} ${lessonName}</span>
                 <h3 style="color:#0d47a1; margin-bottom:12px; font-size:20px;">${videoTitle}</h3>
-                <a href="${videoLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; padding:12px 25px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:18px;">
-                    <i class="fa-solid fa-play"></i> مشاهدة الفيديو
+                
+                <!-- مشغل الفيديو المتجاوب داخل الموقع -->
+                <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; margin-bottom:15px; background:#000; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
+                    <iframe src="${embedLink}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                </div>
+
+                <a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; padding:10px 22px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:16px;">
+                    <i class="fa-solid fa-play"></i> مشاهدة مباشرة على يوتيوب
                 </a>
             </div>
         `;
