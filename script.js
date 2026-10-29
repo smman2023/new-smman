@@ -389,8 +389,10 @@ function showNotices() {
     }, 'notice');
 }
 
-// عرض الفيديوهات التعليمية (Videoss) مع غلق الفيديو السابق عند تشغيل فيديو آخر
-// عرض الفيديوهات التعليمية (Videoss) باستخدام YouTube API لإيقاف الفيديوهات السابقة تماماً
+// متغيرات عامة لتتبع مشغلات يوتيوب
+let youtubePlayers = {};
+
+// عرض الفيديوهات التعليمية (Videoss) مع الإيقاف التلقائي الدقيق عند تشغيل أي فيديو
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -408,6 +410,9 @@ function showVideoss() {
         return;
     }
 
+    // تفريغ المشغلات القديمة
+    youtubePlayers = {};
+
     let html = "";
     videos.forEach((item, index) => {
         const unitName = item.unit ? `(${item.unit})` : '';
@@ -417,7 +422,6 @@ function showVideoss() {
         let rawLink = item.video || '#';
         let videoId = '';
 
-        // استخراج معرف فيديو يوتيوب (Video ID) بدقة
         if (rawLink.includes("watch?v=")) {
             videoId = rawLink.split("watch?v=")[1].split("&")[0];
         } else if (rawLink.includes("youtu.be/")) {
@@ -431,7 +435,7 @@ function showVideoss() {
                 
                 <!-- مشغل الفيديو المتجاوب داخل الموقع -->
                 <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; margin-bottom:15px; background:#000; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
-                    <iframe id="yt-player-${index}" class="academy-video-iframe" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <div id="yt-player-${index}" style="position:absolute; top:0; left:0; width:100%; height:100%;"></div>
                 </div>
 
                 <a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; padding:10px 22px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:16px;">
@@ -443,27 +447,59 @@ function showVideoss() {
 
     VideossContent.innerHTML = html;
 
-    // حقن سكريبت يوتيوب للتحكم التلقائي وإيقاف الفيديوهات الأخرى عند التشغيل
-    if (!window.YT) {
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+    // تحميل وتفعيل YouTube IFrame API إذا لم يكن محملاً
+    if (!window.YT || !window.YT.Player) {
+        if (!document.getElementById("yt-api-script")) {
+            const tag = document.createElement('script');
+            tag.id = "yt-api-script";
+            tag.src = "https://www.youtube.com/iframe_api";
+            document.body.appendChild(tag);
+        }
+        
+        // دالة يتم استدعاؤها تلقائياً عند تحميل مكتبة يوتيوب
+        window.onYouTubeIframeAPIReady = function() {
+            initYouTubePlayers(videos);
+        };
+    } else {
+        initYouTubePlayers(videos);
     }
+}
 
-    // تهيئة اللاعبين وإيقاف البقية عند تفاعل الطالب
-    setTimeout(() => {
-        const iframes = VideossContent.querySelectorAll('.academy-video-iframe');
-        iframes.forEach(iframe => {
-            iframe.addEventListener('click', () => {
-                iframes.forEach(otherIframe => {
-                    if (otherIframe !== iframe) {
-                        const src = otherIframe.src;
-                        otherIframe.src = "";
-                        setTimeout(() => { otherIframe.src = src; }, 50);
+// دالة لإنشاء وتشغيل كينونة لاعبي يوتيوب لكل فيديو
+function initYouTubePlayers(videos) {
+    videos.forEach((item, index) => {
+        let rawLink = item.video || '#';
+        let videoId = '';
+
+        if (rawLink.includes("watch?v=")) {
+            videoId = rawLink.split("watch?v=")[1].split("&")[0];
+        } else if (rawLink.includes("youtu.be/")) {
+            videoId = rawLink.split("youtu.be/")[1].split("?")[0];
+        }
+
+        if (videoId && document.getElementById(`yt-player-${index}`)) {
+            youtubePlayers[index] = new YT.Player(`yt-player-${index}`, {
+                videoId: videoId,
+                playerVars: {
+                    'rel': 0,
+                    'enablejsapi': 1
+                },
+                events: {
+                    'onStateChange': function(event) {
+                        // إذا بدأ الطالب تشغيل هذا الفيديو (State = 1 يعني Playing)
+                        if (event.data == YT.PlayerState.PLAYING) {
+                            // إيقاف جميع الفيديوهات الأخرى فوراً
+                            Object.keys(youtubePlayers).forEach(otherIndex => {
+                                if (otherIndex != index) {
+                                    try {
+                                        youtubePlayers[otherIndex].pauseVideo();
+                                    } catch (e) {}
+                                }
+                            });
+                        }
                     }
-                });
+                }
             });
-        });
-    }, 500);
+        }
+    });
 }
