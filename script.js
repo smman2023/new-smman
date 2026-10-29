@@ -389,8 +389,7 @@ function showNotices() {
     }, 'notice');
 }
 
-// عرض الفيديوهات التعليمية (Videoss)
-// عرض الفيديوهات التعليمية (Videoss) مع تصحيح روابط يوتيوب لمنع خطأ 153
+// عرض الفيديوهات التعليمية (Videoss) مع غلق الفيديو السابق عند تشغيل فيديو آخر
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -409,7 +408,7 @@ function showVideoss() {
     }
 
     let html = "";
-    videos.forEach(item => {
+    videos.forEach((item, index) => {
         const unitName = item.unit ? `(${item.unit})` : '';
         const lessonName = item.lesson ? ` - ${item.lesson}` : '';
         const videoTitle = item.title || 'فيديو تعليمي';
@@ -424,14 +423,17 @@ function showVideoss() {
             embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
         }
 
+        const separator = embedLink.includes("?") ? "&" : "?";
+        const finalEmbedLink = `${embedLink}${separator}enablejsapi=1`;
+
         html += `
-            <div class="video-item-card" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
+            <div class="video-item-card" data-index="${index}" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
                 <span style="display:block; color:#666; font-size:14px; margin-bottom:5px; font-weight:bold;">${unitName} ${lessonName}</span>
                 <h3 style="color:#0d47a1; margin-bottom:12px; font-size:20px;">${videoTitle}</h3>
                 
                 <!-- مشغل الفيديو المتجاوب داخل الموقع -->
                 <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; margin-bottom:15px; background:#000; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
-                    <iframe src="${embedLink}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allowfullscreen></iframe>
+                    <iframe class="academy-video-iframe" src="${finalEmbedLink}" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                 </div>
 
                 <a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; padding:10px 22px; border-radius:10px; text-decoration:none; font-weight:bold; font-size:16px;">
@@ -442,4 +444,24 @@ function showVideoss() {
     });
 
     VideossContent.innerHTML = html;
+
+    // إضافة آلية ذكية لإيقاف وفصل أي فيديو آخر بمجرد تفاعل الطالب مع كارت فيديو جديد
+    const videoCards = VideossContent.querySelectorAll('.video-item-card');
+    
+    videoCards.forEach(card => {
+        card.addEventListener('click', () => {
+            videoCards.forEach(otherCard => {
+                if (otherCard !== card) {
+                    const otherIframe = otherCard.querySelector('iframe');
+                    if (otherIframe) {
+                        const originalSrc = otherIframe.src;
+                        otherIframe.src = "";
+                        setTimeout(() => {
+                            otherIframe.src = originalSrc;
+                        }, 50);
+                    }
+                }
+            });
+        });
+    });
 }
