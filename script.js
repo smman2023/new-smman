@@ -2,13 +2,13 @@
 // Google Sheets APIs
 //=========================================
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyMqzRgorsFQeNhwrNWYb6a6eMgaabkOCgpVTnUUrEnVJ1QTkTyCNWxMT5T1r7lMlSL5w/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxLVPj2dzaHpZUr7AAIiiXUh9F1cKQvKKdgxJJWwIvgdaUStKs7iWFzZFww2EUwvX_h/exec";
 const ATTENDANCE_API = "https://script.google.com/macros/s/AKfycbzd0as48EDKd4k9y2IMggJzTc9QGhMuUysa0X4R1Q6plhtGtFlnfMBbXnyZamZfFPN1/exec";
 const HOMEWORK_API = "https://script.google.com/macros/s/AKfycbyGgMFmNMPR6OAWNBemEoTF_jFs1u2AXaWJXFOeA6iVuOlgeJau1DuAutH89h9oP_hC-g/exec";
 const EXAM_API = "https://script.google.com/macros/s/AKfycbyrSNWCMtLaFZepp3OlxuLip2Pe02X2bndnkbqJE_2DszwwPPKsSnP1wsSlv7pqjvi8fA/exec";
 const PAYMENT_API = "https://script.google.com/macros/s/AKfycbwBxrvavrzIp_9tKKIk63OUYLhk30WkT_zU3JWFk7Km11Dmh8gB_ycqgoND_4Z-JwdX/exec";
 const NOTICE_API = "https://script.google.com/macros/s/AKfycbwl6OSRp_KCjrIuEjGDtg3FsXarWwZ6xvVFto_tzzUFl6lX7sWVXdK0OLhg7oKenWw-/exec";
-const VIDEO_API = "https://script.google.com/macros/s/AKfycbwMiDzkcJDVuEHGBRxco2-Mvecf3BvJNVRYhH8WM7uuekDReL9VcPOD4rsdEBy3DU9s/exec";
+const VIDEO_API = "https://script.google.com/macros/s/AKfycbxTk22Iib2Ns1lTyclDKPZa62NWSExaYayCRX8rtZRGrdXGE_rTa-jKtnUlSrLsH_fv/exec";
 
 let currentStudent = null;
 
@@ -389,7 +389,11 @@ function showNotices() {
     }, 'notice');
 }
 
-// عرض الفيديوهات التعليمية (Videoss) مع الإيقاف والغلق التام للفيديو السابق عند تشغيل فيديو جديد
+//==================================================
+// عرض الفيديوهات التعليمية (طريقة البطاقات وعرض شاشة المشاهدة المنفصلة)
+//==================================================
+
+// عرض قائمة الفيديوهات على شكل كروت
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -407,66 +411,91 @@ function showVideoss() {
         return;
     }
 
-    let html = "";
+    let html = `
+        <h2 class="result-title" style="margin-bottom: 20px;">
+            <i class="fa-solid fa-play-circle"></i> مكتبة الفيديوهات
+        </h2>
+    `;
+
     videos.forEach((item, index) => {
-        const unitName = item.unit ? `(${item.unit})` : '';
-        const lessonName = item.lesson ? ` - ${item.lesson}` : '';
+        const unitName = item.unit ? `${item.unit}` : '';
+        const lessonName = item.lesson ? `${item.lesson}` : '';
         const videoTitle = item.title || 'فيديو تعليمي';
-        
-        let rawLink = item.video || '#';
-        let embedLink = rawLink;
-
-        if (rawLink.includes("watch?v=")) {
-            embedLink = rawLink.replace("watch?v=", "embed/");
-        } else if (rawLink.includes("youtu.be/")) {
-            embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
-        }
-
-        if (embedLink.includes("&")) {
-            embedLink = embedLink.split("&")[0];
-        }
 
         html += `
-            <div class="video-item-card" style="background:#f7f9fc; padding:20px; border-radius:15px; margin-bottom:20px; box-shadow:0 3px 10px rgba(0,0,0,0.08); text-align:center;">
-                <span style="display:block; color:#666; font-size:14px; margin-bottom:5px; font-weight:bold;">${unitName} ${lessonName}</span>
-                <h3 style="color:#0d47a1; margin-bottom:12px; font-size:20px;">${videoTitle}</h3>
-                
-                <!-- مشغل الفيديو المتجاوب داخل الموقع -->
-                <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:12px; overflow:hidden; margin-bottom:15px; background:#000; box-shadow:0 4px 15px rgba(0,0,0,0.15);">
-                    <iframe class="academy-video-iframe" data-src="${embedLink}" src="" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <div class="video-card-item" onclick="openSingleVideo(${index})" style="background:#fff; border: 2px solid #e3f2fd; padding:18px 20px; border-radius:18px; margin-bottom:15px; box-shadow:0 4px 15px rgba(13,71,161,0.08); cursor:pointer; transition:all 0.3s ease; display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="color:#0d47a1; font-size:15px; font-weight:bold;">${unitName}</span>
+                    <div style="width:38px; height:38px; background:#e3f2fd; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#0d47a1; font-size:16px;">
+                        <i class="fa-solid fa-play"></i>
+                    </div>
                 </div>
-
-                <button class="load-video-btn" style="background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; border:none; padding:10px 22px; border-radius:10px; font-weight:bold; font-size:16px; cursor:pointer; margin-bottom:10px;">
-                    <i class="fa-solid fa-play"></i> تشغيل الفيديو داخل المنصة
+                <h3 style="color:#222; font-size:19px; font-weight:bold; text-align:right; margin:0;">${lessonName} - ${videoTitle}</h3>
+                <button style="width:100%; height:45px; background:linear-gradient(135deg,#2e7d32,#43a047); color:#fff; border:none; border-radius:12px; font-weight:bold; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 4px 12px rgba(46,125,50,0.2);">
+                    <i class="fa-solid fa-play"></i> مشاهدة الفيديو
                 </button>
-                <br>
-                <a href="${rawLink}" target="_blank" rel="noopener noreferrer" class="watch-video-btn" style="display:inline-block; color:#666; font-size:14px; text-decoration:underline;">
-                    مشاهدة مباشرة على يوتيوب
-                </a>
             </div>
         `;
     });
 
     VideossContent.innerHTML = html;
+}
 
-    // تفعيل زر التشغيل لكل فيديو لإغلاق البقية تماماً ومنع عمل أكثر من فيديو في نفس الوقت
-    const videoCards = VideossContent.querySelectorAll('.video-item-card');
-    
-    videoCards.forEach(card => {
-        const playBtn = card.querySelector('.load-video-btn');
-        const iframe = card.querySelector('iframe');
-        
-        playBtn.addEventListener('click', () => {
-            // إيقاف وتفريغ جميع الـ iframes الأخرى فوراً وغلقها تماماً
-            videoCards.forEach(otherCard => {
-                const otherIframe = otherCard.querySelector('iframe');
-                if (otherIframe !== iframe) {
-                    otherIframe.src = ""; 
-                }
-            });
+// فتح مشغل فيديو منفصل مع أزرار التنقل (الدرس السابق / التالي / العودة)
+function openSingleVideo(index) {
+    const videos = currentStudent && currentStudent.videos ? currentStudent.videos : [];
+    const item = videos[index];
+    if (!item) return;
 
-            // تشغيل الفيديو الحالي
-            iframe.src = iframe.getAttribute('data-src') + "?autoplay=1";
-        });
-    });
+    let rawLink = item.video || '#';
+    let embedLink = rawLink;
+
+    if (rawLink.includes("watch?v=")) {
+        embedLink = rawLink.replace("watch?v=", "embed/");
+    } else if (rawLink.includes("youtu.be/")) {
+        embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
+    }
+    if (embedLink.includes("&")) {
+        embedLink = embedLink.split("&")[0];
+    }
+
+    const lessonName = item.lesson ? `${item.lesson}` : '';
+    const videoTitle = item.title || '';
+
+    let html = `
+        <h2 class="result-title" style="margin-bottom: 20px;">
+            ${lessonName} ${videoTitle ? ' - ' + videoTitle : ''}
+        </h2>
+
+        <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:15px; overflow:hidden; margin-bottom:20px; background:#000; box-shadow:0 6px 20px rgba(0,0,0,0.2);">
+            <iframe class="academy-video-iframe" src="${embedLink}?autoplay=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    `;
+
+    // زر الدرس السابق (إن وجد)
+    if (index > 0) {
+        html += `
+            <button onclick="openSingleVideo(${index - 1})" style="width:100%; height:52px; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 12px rgba(13,71,161,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-arrow-right"></i> الدرس السابق
+            </button>
+        `;
+    }
+
+    // زر الدرس التالي (إن وجد)
+    if (index < videos.length - 1) {
+        html += `
+            <button onclick="openSingleVideo(${index + 1})" style="width:100%; height:52px; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 12px rgba(13,71,161,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
+                <i class="fa-solid fa-arrow-left"></i> الدرس التالي
+            </button>
+        `;
+    }
+
+    // زر العودة لقائمة الفيديوهات
+    html += `
+        <button onclick="showVideoss()" style="width:100%; height:52px; background:linear-gradient(135deg,#c62828,#e53935); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(198,40,40,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
+            <i class="fa-solid fa-arrow-right"></i> العودة إلى الفيديوهات
+        </button>
+    `;
+
+    VideossContent.innerHTML = html;
 }
