@@ -466,6 +466,10 @@ function openSingleVideo(index) {
         embedLink = embedLink.split("&")[0];
     }
 
+    // إضافة معلمات التشغيل التلقائي (autoplay=1)
+    const autoplayParams = embedLink.includes("?") ? "&autoplay=1" : "?autoplay=1";
+    embedLink += autoplayParams;
+
     const lessonName = item.lesson ? `${item.lesson}` : '';
     const videoTitle = item.title || '';
 
@@ -475,7 +479,12 @@ function openSingleVideo(index) {
         </h2>
 
         <div style="position:relative; width:100%; padding-bottom:56.25%; height:0; border-radius:15px; overflow:hidden; margin-bottom:20px; background:#000; box-shadow:0 6px 20px rgba(0,0,0,0.2);">
-            <iframe class="academy-video-iframe" src="${embedLink}?autoplay=1" style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <iframe class="academy-video-iframe" 
+                    src="${embedLink}" 
+                    style="position:absolute; top:0; left:0; width:100%; height:100%; border:0;" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
         </div>
     `;
 
