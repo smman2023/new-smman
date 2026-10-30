@@ -2,7 +2,7 @@
 // Google Sheets APIs
 //=========================================
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxQN7eJve03INM-0xGu_Nj45y5n7jL0h16S8mJO5WzVRHmlIMcFZHqY2tvhcFf7aCV6AQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzuSfWfK1DTXkp0kJ29UkjzRwGFPjVwznv2XDFInNdCgPPz9Q8zqzDevfUuu1uHSmqzEw/exec";
 const ATTENDANCE_API = "https://script.google.com/macros/s/AKfycbzd0as48EDKd4k9y2IMggJzTc9QGhMuUysa0X4R1Q6plhtGtFlnfMBbXnyZamZfFPN1/exec";
 const HOMEWORK_API = "https://script.google.com/macros/s/AKfycbyGgMFmNMPR6OAWNBemEoTF_jFs1u2AXaWJXFOeA6iVuOlgeJau1DuAutH89h9oP_hC-g/exec";
 const EXAM_API = "https://script.google.com/macros/s/AKfycbyrSNWCMtLaFZepp3OlxuLip2Pe02X2bndnkbqJE_2DszwwPPKsSnP1wsSlv7pqjvi8fA/exec";
@@ -38,7 +38,7 @@ const paymentBtn = document.getElementById("paymentBtn");
 const noticeBtn = document.getElementById("noticeBtn");
 const videoBtn = document.getElementById("videoBtn");
 
-// الكروت (مع تحديث بطاقة Videoss)
+// الكروت
 const attendanceCard = document.getElementById("attendanceCard");
 const homeworkCard = document.getElementById("homeworkCard");
 const examCard = document.getElementById("examCard");
@@ -46,7 +46,7 @@ const paymentCard = document.getElementById("paymentCard");
 const noticeCard = document.getElementById("noticeCard");
 const VideossCard = document.getElementById("VideossCard");
 
-// محتوى الكروت (مع تحديث محتوى VideossContent)
+// محتوى الكروت
 const attendanceContent = document.getElementById("attendanceContent");
 const homeworkContent = document.getElementById("homeworkContent");
 const examContent = document.getElementById("examContent");
@@ -54,7 +54,7 @@ const paymentContent = document.getElementById("paymentContent");
 const noticeContent = document.getElementById("noticeContent");
 const VideossContent = document.getElementById("VideossContent");
 
-// أزرار العودة (مع تحديث زر العودة لـ Videoss)
+// أزرار العودة
 const backBtn = document.getElementById("backBtn");
 const backHomeworkBtn = document.getElementById("backHomeworkBtn");
 const backExamBtn = document.getElementById("backExamBtn");
@@ -111,6 +111,12 @@ if (logoutBtn) {
         if(codeInput) codeInput.value = "";
         if(passwordInput) passwordInput.value = "";
         if(result) result.classList.add("hidden");
+        if(attendanceCard) attendanceCard.classList.add("hidden");
+        if(homeworkCard) homeworkCard.classList.add("hidden");
+        if(examCard) examCard.classList.add("hidden");
+        if(paymentCard) paymentCard.classList.add("hidden");
+        if(noticeCard) noticeCard.classList.add("hidden");
+        if(VideossCard) VideossCard.classList.add("hidden");
         currentStudent = null;
         alert("تم تسجيل الخروج بنجاح");
     });
@@ -379,10 +385,10 @@ function showNotices() {
             return `<div class="attendance-mobile-card notice-card"><div class="card-item"><span>📘 الحصة</span><strong>${item.lesson || '0'}</strong></div><div class="card-item"><span>📅 التاريخ</span><strong>${item.date || '0'}</strong></div><div style="margin-top:15px;line-height:2"><span style="color:#d32f2f;font-weight:bold">🔔 التنبيه</span><br>${item.notice || '0'}</div>${imgHtmlMobile}</div>`;
         }
 
-        let table = `<div class="table-wrapper"><table class="attendance-table"><tr><th>الحصة</th><th>التاريخ</th><th>التنبيه أو الملاحظة</th><th>الصورة المرفقةة</th></tr>`;
+        let table = `<div class="table-wrapper"><table class="attendance-table"><tr><th>الحصة</th><th>التاريخ</th><th>التنبيه أو الملاحظة</th><th>الصورة المرفقة</th></tr>`;
         item.forEach(row => {
             const rowImgUrl = row.image || row.imageUrl || row.photo || "";
-            const imgHtmlDesktop = rowImgUrl ? `<a href="${rowImgUrl}" target="_blank"><img src="${rowImgUrl}" alt="صورة" style="width:150px; max-height:120px; border-radius:8px; object-fit:cover; box-shadow:0 3px 10px rgba(0,0,0,0.15);"></a>` : "0";
+            const imgHtmlDesktop = rowImgUrl ? `<a href="${rowImgUrl}" target="_blank"><img src="${rowImgUrl}" alt="صورة" style="width:150px; max-height:120px; border-radius:8px; object-fit:cover; box-shadow:0 3px 10px rgba(0,0,0,0.15);"></a>` : "لا توجد صورة";
             table += `<tr><td>${row.lesson || '0'}</td><td>${row.date || '0'}</td><td>${row.notice || '0'}</td><td>${imgHtmlDesktop}</td></tr>`;
         });
         return table + `</table></div>`;
@@ -390,10 +396,9 @@ function showNotices() {
 }
 
 //==================================================
-// عرض الفيديوهات التعليمية (طريقة البطاقات وعرض شاشة المشاهدة المنفصلة)
+// عرض الفيديوهات التعليمية
 //==================================================
 
-// عرض قائمة الفيديوهات على شكل كروت
 function showVideoss() {
     if(result) result.classList.add("hidden");
     if(attendanceCard) attendanceCard.classList.add("hidden");
@@ -441,7 +446,6 @@ function showVideoss() {
     VideossContent.innerHTML = html;
 }
 
-// فتح مشغل فيديو منفصل مع أزرار التنقل (الدرس السابق / التالي / العودة)
 function openSingleVideo(index) {
     const videos = currentStudent && currentStudent.videos ? currentStudent.videos : [];
     const item = videos[index];
@@ -454,7 +458,10 @@ function openSingleVideo(index) {
         embedLink = rawLink.replace("watch?v=", "embed/");
     } else if (rawLink.includes("youtu.be/")) {
         embedLink = rawLink.replace("youtu.be/", "www.youtube.com/embed/");
+    } else if (rawLink.includes("shorts/")) {
+        embedLink = rawLink.replace("shorts/", "embed/");
     }
+    
     if (embedLink.includes("&")) {
         embedLink = embedLink.split("&")[0];
     }
@@ -472,7 +479,6 @@ function openSingleVideo(index) {
         </div>
     `;
 
-    // زر الدرس السابق (إن وجد)
     if (index > 0) {
         html += `
             <button onclick="openSingleVideo(${index - 1})" style="width:100%; height:52px; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 12px rgba(13,71,161,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -481,7 +487,6 @@ function openSingleVideo(index) {
         `;
     }
 
-    // زر الدرس التالي (إن وجد)
     if (index < videos.length - 1) {
         html += `
             <button onclick="openSingleVideo(${index + 1})" style="width:100%; height:52px; background:linear-gradient(135deg,#0d47a1,#1976d2); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; margin-bottom:12px; box-shadow:0 4px 12px rgba(13,71,161,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
@@ -490,7 +495,6 @@ function openSingleVideo(index) {
         `;
     }
 
-    // زر العودة لقائمة الفيديوهات
     html += `
         <button onclick="showVideoss()" style="width:100%; height:52px; background:linear-gradient(135deg,#c62828,#e53935); color:#fff; border:none; border-radius:14px; font-weight:bold; font-size:17px; cursor:pointer; box-shadow:0 4px 12px rgba(198,40,40,0.2); display:flex; align-items:center; justify-content:center; gap:8px;">
             <i class="fa-solid fa-arrow-right"></i> العودة إلى الفيديوهات
